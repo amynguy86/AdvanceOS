@@ -88,7 +88,12 @@ static Memory * getInstance();
 //0 for success
 //1 for still waiting on more server replies
 //2 Unable to form majority
-int unlockData(unsigned int key,std::string& val,int rqstNo,unsigned char FromServerNo,Holder::MetaData &metaData);
+
+//MetaDataOut is the metadata copied from whats in the memory
+//MetaDataOut is the metaData passed from the server that replied with CODE_VOTE_REPLY
+
+//Use metaDataOut for keeping track of which servers contains the latest version No.
+int unlockData(unsigned int key,std::string& val,int rqstNo,unsigned char FromServerNo,const Holder::MetaData &metaDataIn,Holder::MetaData &metaDataOut);
 int forceUnlockData(int key);
 private:
 Memory();

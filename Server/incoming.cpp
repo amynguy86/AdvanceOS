@@ -471,7 +471,7 @@ if(rc==-1)
     serverBit= serverBit<<reqMsg.getId();
     if(reqMsg.getRc()!=RC_SUCCESS){fprintf(stderr, "the server No:%d, return unsuccessful result Code",reqMsg.getId()); assert(0);}
     
-    int rc=Memory::getInstance()->unlockData(reqMsg.getKey(),val,reqMsg.getRqstNo(),serverBit,metaData);
+    int rc=Memory::getInstance()->unlockData(reqMsg.getKey(),val,reqMsg.getRqstNo(),serverBit,reqMsg.getMetaData(),metaData);
     
     if(rc==-1) assert(0); //todo not sure what to do here
     else if(rc==1) break;

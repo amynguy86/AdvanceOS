@@ -111,7 +111,7 @@ int Memory::forceUnlockData(int key)
 	return 0;
 }
 
-int Memory::unlockData(unsigned int key,std::string& val,int rqstNo,unsigned char fromServerNo,Holder::MetaData &metaData)
+int Memory::unlockData(unsigned int key,std::string& val,int rqstNo,unsigned char fromServerNo,const Holder::MetaData &metaDataIn,Holder::MetaData &metaDataOut)
 {
  Holder * data= NULL;
  {
@@ -135,7 +135,7 @@ int Memory::unlockData(unsigned int key,std::string& val,int rqstNo,unsigned cha
  
  if(rqstNo!=data->metaData.rqstNo)
   {
-   fprintf(stderr,"unLockData, rqstNo does not match RqstNo given%d: acual RqstNo%d: key: %d\n",rqstNo,metaData.rqstNo,key);
+   fprintf(stderr,"unLockData, rqstNo does not match RqstNo given%d: acual RqstNo%d: key: %d\n",rqstNo,data->metaData.rqstNo,key);
    return -1;
   }
  
@@ -148,14 +148,14 @@ int Memory::unlockData(unsigned int key,std::string& val,int rqstNo,unsigned cha
   }
  }
 
- metaData.initiatingClient=data->metaData.initiatingClient;
- metaData.rqstNo=data->metaData.rqstNo;
- metaData.isUpdate=data->metaData.isUpdate;
- metaData.serverWaitingOnUnchanged=data->metaData.serverWaitingOnUnchanged;
+ metaDataOut.initiatingClient=data->metaData.initiatingClient;
+ metaDataOut.rqstNo=data->metaData.rqstNo;
+ metaDataOut.isUpdate=data->metaData.isUpdate;
+ metaDataOut.serverWaitingOnUnchanged=data->metaData.serverWaitingOnUnchanged;
 
  /*
   * Need to evaluate here if majorty is formed(todo)
-  * if majority not formed, should not commit
+  * if majority not formed, should not commit however please unlock it anyways
   */
  data->commit();
  val=data->currData;
