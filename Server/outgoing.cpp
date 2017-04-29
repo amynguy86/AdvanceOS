@@ -15,7 +15,7 @@ int Outgoing::tearDown()
  sendMsg.setRqstNo(255); //just some random no
  toreDown=true;
  
- assert(sendMsg.sendAll(processFDMap[0])==0);
+ assert(sendMsg.sendAll(processFDMap[0].fd)==0);
  return 0;
 }
 int Outgoing::establishConnWithMain()
@@ -52,7 +52,7 @@ int Outgoing::establishConnWithMain()
  This hash does not need to protected with a mutex because it has several reader but only one writer
  Writing takes place either here for slave processes or in Incoming for master  
  */
- processFDMap[0]=sockFd;
+ processFDMap[0].fd=sockFd;
 
  //todo check if these values have been set
  sendMsg.setCode(CODE_ESTABLISH);
@@ -90,14 +90,13 @@ else if(rc==1)
 
 void Outgoing::addToProcessFDMap(Id processNum,int fd)
 {
- processFDMap[processNum]=fd;
- fdProcessMap[fd]=processNum;
+ processFDMap[processNum].fd=fd;
+ processFDMap[processNum].enabled=true;
 
  if(processFDMap.size()>totalProc-1)
  {
   cerr<<"All Processes Have been already addded to the map"<<endl;
   processFDMap.erase(processNum);
-  fdProcessMap.erase(fd);
   return;
  }
 
@@ -146,8 +145,7 @@ for(auto& x : *msgParser.getAllIpAddr())
   reqMsgToServer.setRqstNo(0); //does not matter
   reqMsgToServer.sendAll(sockFd);
 
-  processFDMap[x.first]=sockFd; 
-  fdProcessMap[sockFd]=x.first; //just a hack better design needed here
+  processFDMap[x.first].fd=sockFd;
  }
 
  std::cerr<<"Successfully established Connection with All processes"<<std::endl;
@@ -158,8 +156,20 @@ for(auto& x : *msgParser.getAllIpAddr())
 
 int Outgoing::send(Id toProcessNum,ServerToServer &reqMsgToServer)
 {
-  assert(reqMsgToServer.sendAll(processFDMap[toProcessNum])==0);
+  if(isLinkDisabled(toProcessNum)) return -1;
+
+  assert(reqMsgToServer.sendAll(processFDMap[toProcessNum].fd)==0);
   return 0;
+}
+
+int Outgoing::sendMsgToServers(const vector<Id> &serverToSend,ServerToServer reqMsgToServer)
+{
+ for(Id x:serverToSend)
+ {
+  if(send(x,reqMsgToServer)!=0)
+	  return -1;
+ }
+ return 0;
 }
 
 void Outgoing::stop()
@@ -168,7 +178,7 @@ void Outgoing::stop()
  ivMut.unlock(); //incase something is stuck here in the event computation could not progress due to some error
  for(auto& x:processFDMap)
   {
-  shutdown(x.second,2);
-  close(x.second);
+  shutdown(x.second.fd,2);
+  close(x.second.fd);
   }
 }

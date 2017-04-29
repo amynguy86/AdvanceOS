@@ -136,11 +136,17 @@ int Incoming::allowClientRqsts()
 void Incoming::serveClientRqsts(Obj_method obj_method)
 {
  int fromFd=obj_method.fd;
- while(true)
- {
  ServerToServer reqMsgToServer;
  ClientToServer replyMsgToClient; 
  ClientToServer reqMsgFromClient;
+ std::vector<Id> serversToSend;
+
+ while(true)
+ {
+ serversToSend.clear();
+ reqMsgToServer.reset();
+ replyMsgToClient.reset();
+ reqMsgFromClient.reset();
 
  int rc=reqMsgFromClient.recvAll(fromFd);
  if(rc==1){close(fromFd); return;}
@@ -153,6 +159,9 @@ void Incoming::serveClientRqsts(Obj_method obj_method)
 
  switch(reqMsgFromClient.getCode())
  {
+ /*
+  * Not Applicable to Project3
+  *
   case CODE_READ:
    {
    const char * data=Memory::getInstance()->read(reqMsgFromClient.getKey());
@@ -173,43 +182,54 @@ void Incoming::serveClientRqsts(Obj_method obj_method)
     replyMsgToClient.sendAll(fromFd);
     break;
    }
+   */
+
+  //CODE_INSERT is also not applicable to Project3
   case CODE_UPDATE:
   case CODE_INSERT:
   {
   if(reqMsgFromClient.getCode()==CODE_INSERT)
+  {
    isUpdate=false;
+   assert(0);
+  }
   else
    isUpdate=true;
 
   unsigned char serverToWaitOn=0;
   unsigned char serverBit=1;
-  const std::vector<ServerName> &serverNames=reqMsgFromClient.getServerNames();
   
-  for(int i=0;i<serverNames.size();i++)
-  {
-   serverBit=1;
-   serverBit=serverBit << serverNames[i];
-   serverToWaitOn=serverToWaitOn | serverBit;
-  }
-  
-  int rc=Memory::getInstance()->AddOrUpdateWithLock(reqMsgFromClient.getKey(),reqMsgFromClient.getVal(),fromFd,serverToWaitOn,reqMsgFromClient.getRqstNo(),isUpdate);
-
-  if(rc==0)
-  {
+  /*
+   * Amin: Once a server receives a request, it should forward vote_request to all
+   * other servers that are in the cluster
+   */
    reqMsgToServer.setRc(RC_NONE);
-   reqMsgToServer.setDataBlock(reqMsgFromClient.getKey(),reqMsgFromClient.getValLen(),reqMsgFromClient.getVal());
    reqMsgToServer.setId(obj_method.obj->myProcNum);
-   reqMsgToServer.setCode(reqMsgFromClient.getCode());
+   reqMsgToServer.setCode(CODE_VOTE_REQUEST);
    reqMsgToServer.setRqstNo(reqMsgFromClient.getRqstNo());
-   int serverFd=-1;
+   reqMsgToServer.setDataBlock(reqMsgFromClient.getKey());
 
-   for(int i=0;i<serverNames.size();i++)
-   {  
-    obj_method.obj->outgoingHandler->send(serverNames[i],reqMsgToServer);
-   } 
- }
- else
+   int serverFd=-1;
+   int rc;
+
+   //construct the servers to wait on(those that are alive)
+   for(auto x=obj_method.obj->processIPMap.begin();x!=obj_method.obj->processIPMap.end();++x)
+   {
+	  //if this server is alive..
+	   if(!obj_method.obj->outgoingHandler->isLinkDisabled(x->first))
+	   {
+		   serverBit=1;
+		   serverBit=serverBit << x->first;
+		   serverToWaitOn=serverToWaitOn | serverBit;
+		   serversToSend.push_back(x->first);
+	   }
+   }
+
+ rc=Memory::getInstance()->AddOrUpdateWithLock(reqMsgFromClient.getKey(),reqMsgFromClient.getVal(),fromFd,serverToWaitOn,reqMsgFromClient.getRqstNo(),isUpdate);
+
+ if(rc!=0)
   {
+	Memory::getInstance()->forceUnlockData(reqMsgFromClient.getKey());
     replyMsgToClient.setRc(RC_FAIL);
     replyMsgToClient.setDataBlock(reqMsgFromClient.getKey());
     replyMsgToClient.setId(obj_method.obj->myProcNum);
@@ -217,6 +237,20 @@ void Incoming::serveClientRqsts(Obj_method obj_method)
     replyMsgToClient.setRqstNo(reqMsgFromClient.getRqstNo());
     replyMsgToClient.sendAll(fromFd);
   }
+ else
+ {
+	 if(obj_method.obj->outgoingHandler->sendMsgToServers(serversToSend,reqMsgToServer)!=0)
+	 {
+		 Memory::getInstance()->forceUnlockData(reqMsgFromClient.getKey());
+		 replyMsgToClient.setRc(RC_FAIL);
+		 replyMsgToClient.setDataBlock(reqMsgFromClient.getKey());
+		 replyMsgToClient.setId(obj_method.obj->myProcNum);
+		 replyMsgToClient.setCode(CODE_REPLY);
+		 replyMsgToClient.setRqstNo(reqMsgFromClient.getRqstNo());
+		 replyMsgToClient.sendAll(fromFd);
+	 }
+ }
+
   break;
   }
  default:
@@ -415,39 +449,58 @@ if(rc==-1)
    case CODE_UPDATE:
    { 
     if(reqMsg.getCode()==CODE_INSERT)
+    {
+      //should not occur for project 3
+      assert(0);
       isUpdate=false;
+    }
    else 
       isUpdate=true;
     
-    int rc=Memory::getInstance()->AddOrUpdate(reqMsg.getKey(),reqMsg.getVal(),isUpdate);
-    if(rc==0)
-     replyMsg.setRc(RC_SUCCESS);
-    else
-     replyMsg.setRc(RC_FAIL);
-    
-    replyMsg.setId(myProc);
-    replyMsg.setCode(CODE_REPLY);
-    replyMsg.setRqstNo(reqMsg.getRqstNo());
-    replyMsg.setDataBlock(reqMsg.getKey());
-    outgoingHandler->send(reqMsg.getId(),replyMsg);
-    
+    int rc=Memory::getInstance()->AddOrUpdate(reqMsg.getKey(),reqMsg.getVal(),reqMsg.getMetaData(),isUpdate);
+    if(rc!=0)
+      assert(0);
     break;
    }
 
-   case CODE_REPLY:
+   case CODE_VOTE_REPLY:
    {
-    //This should only be done at the primary server
     Memory::Holder::MetaData metaData;
+    std::string val;
     unsigned char serverBit=1;
     serverBit= serverBit<<reqMsg.getId();
     if(reqMsg.getRc()!=RC_SUCCESS){fprintf(stderr, "the server No:%d, return unsuccessful result Code",reqMsg.getId()); assert(0);}
     
-    int rc=Memory::getInstance()->unlockData(reqMsg.getKey(),reqMsg.getRqstNo(),serverBit,metaData);
+    int rc=Memory::getInstance()->unlockData(reqMsg.getKey(),val,reqMsg.getRqstNo(),serverBit,metaData);
     
     if(rc==-1) assert(0); //todo not sure what to do here
     else if(rc==1) break;
+    else if(rc==2)
+    {
+	//unable to form majority(todo code Missing in Memory)
+	replyMsgToClient.setRc(RC_FAIL);
+	replyMsgToClient.setId(myProc);
+	replyMsgToClient.setCode(CODE_REPLY);
+	replyMsgToClient.setRqstNo(metaData.rqstNo);
+	replyMsgToClient.sendAll(metaData.initiatingClient);
+	break;
+    }
     
-    //succesfully unlocked
+   //succesfully got Majority so update all servers
+   for(int i=0;i<sizeof(unsigned char)*8;i++)
+   {
+	   if(metaData.serverWaitingOnUnchanged & 1<<i)
+	   {
+	   replyMsg.setRc(RC_NONE);
+	   replyMsg.setId(obj_method.obj->myProcNum);
+	   replyMsg.setCode(CODE_UPDATE);
+	   replyMsg.setRqstNo(reqMsg.getRqstNo());
+	   replyMsg.setDataBlock(reqMsg.getKey(),val.size(),val.c_str());//data form memory)
+	   replyMsg.setMetaData(metaData.ru,metaData.version,metaData.ds);
+	   replyMsg.sendAll(i);
+	   }
+   }
+
     replyMsgToClient.setRc(RC_SUCCESS);
     replyMsgToClient.setId(myProc);
     replyMsgToClient.setCode(CODE_REPLY);
@@ -455,6 +508,34 @@ if(rc==-1)
     replyMsgToClient.sendAll(metaData.initiatingClient);
 
     break;
+   }
+
+   case CODE_VOTE_REQUEST:
+   {
+	   RU ru=0;
+	   DS ds=0;
+	   Version v=0;
+
+	   int rc=Memory::getInstance()->readMetaData(reqMsg.getKey(),ru,v,ds);
+
+	   replyMsg.setId(myProc);
+	   replyMsg.setCode(CODE_VOTE_REPLY);
+	   replyMsg.setRqstNo(reqMsg.getRqstNo());
+	   replyMsg.setMetaData(ru,v,ds);
+	   replyMsg.setDataBlock(reqMsg.getKey());
+
+	   if(rc==0)
+	   {
+	   replyMsg.setRc(RC_SUCCESS);
+	   }
+	   else
+	   {
+	   replyMsg.setRc(RC_FAIL);
+	   }
+
+	   assert(outgoingHandler->send(reqMsg.getId(),replyMsg)==0);
+
+	   break;
    }
 
    default:

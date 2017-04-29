@@ -86,6 +86,8 @@ static const int CODE_READ=6;
 static const int CODE_COMPLETE=7;
 static const int CODE_DELETE=8;
 static const int CODE_GETMYID=9;
+static const int CODE_VOTE_REQUEST=10;
+static const int CODE_VOTE_REPLY=11;
 
 //Structure represeting the DataBlock
 typedef struct 

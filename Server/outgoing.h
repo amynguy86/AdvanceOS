@@ -21,12 +21,13 @@
 #include <condition_variable>
 using namespace std;
 
-/*
- * Defintion of Global Variables defined in the Main Unit
- */
-typedef unordered_map<Id,int> ProcessFDMap ; //processNumeber map to socket
-typedef unordered_map<Id,int> FdProcessMap ; //socket to ProcessNumber
+typedef struct
+{
+ int fd;
+ bool enabled;
+} FDHolder;
 
+typedef unordered_map<Id,FDHolder> ProcessFDMap ; //processNumeber map to socket
 typedef ServerToServer MsgParser;
 
 class Outgoing
@@ -41,8 +42,14 @@ void setMainProcAddr(struct sockaddr_in & aAddr){mainProcAddr=aAddr;}
 void setTotalProc(int num){totalProc=num;}
 void addToProcessFDMap(Id processNum,int fd);
 
-Id convertFdtoId(int fd){return fdProcessMap[fd];}
+//return 0 for success, -1 for failure, anyone sending should already ensure
+//that link is avaliable
+
 int send(Id toProcessNum,ServerToServer &reqMsgtoServer);
+int sendMsgToServers(const vector<Id> &serverToSend,ServerToServer reqMsgToServer);
+
+void disableLink(Id processNum){processFDMap[processNum].enabled=false;}
+bool isLinkDisabled(Id processNum){return !processFDMap[processNum].enabled;}
 
 static bool allTrue(bool * toCheck,int size);
 void stop();
@@ -58,8 +65,7 @@ ServerToServer sendMsg;
 struct sockaddr_in mainProcAddr;
 struct sockaddr_in myAddr;
 ProcessFDMap processFDMap;
-FdProcessMap fdProcessMap;
-std::mutex ivMut;
+std::mutex ivMut; //this is first used on startup and then to protect disable link flag.
 int totalProc;
 
 };

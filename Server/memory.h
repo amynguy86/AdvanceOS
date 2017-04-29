@@ -26,25 +26,14 @@
 #include <assert.h>
 #include <mutex>
 
+typedef unsigned char RU;
+typedef unsigned char DS;
+typedef unsigned char Version;
 
 
 class Memory
 {
 public:
-//-1 for error
-//1 for success
-/*
- * The one with the lock will only be executed by the primary server of the object.
- * The other one will be executed by the backup server of the object upon receving the request from the primary server.
- */ 
-int AddOrUpdateWithLock(unsigned int key,const char * val,int initiatingClient,unsigned char serverToWaitOnBitMap,int rqstNo,bool isUpdate);
-int AddOrUpdate(unsigned int key,const char * val,bool isUpdate);
-
-
-
-const char * read(unsigned int key);
-static Memory * getInstance();
-~Memory(){}
 
 class Holder
 {
@@ -60,9 +49,17 @@ class MetaData
 {
 public:
 unsigned char serverWaitingOnBitMap;
+unsigned char serverWaitingOnUnchanged;
 int initiatingClient;
 int rqstNo;
 bool isUpdate; 
+
+/*
+ * Project 3 specific variables
+ */
+ DS ds;
+ RU ru;
+ Version version;
 };
 
 MetaData metaData;
@@ -70,11 +67,31 @@ std::mutex ivMut;
 };
 
 //-1 for error
+//1 for success
+/*
+ * The one with the lock will only be executed by the primary server of the object.
+ * The other one will be executed by the backup server of the object upon receving the request from the primary server.
+ */
+int AddOrUpdateWithLock(unsigned int key,const char * val,int initiatingClient,unsigned char serverToWaitOnBitMap,int rqstNo,bool isUpdate);
+int AddOrUpdate(unsigned int key,const char * val,const Holder::MetaData& meta,bool isUpdate);
+
+
+
+const char * read(unsigned int key);
+int readMetaData(unsigned int key,RU &ru, Version &version,DS &ds);
+static Memory * getInstance();
+~Memory(){}
+
+
+
+//-1 for error
 //0 for success
-//1 for still waiting on clients
-int unlockData(unsigned int key,int rqstNo,unsigned char FromServerNo,Holder::MetaData &metaData);
+//1 for still waiting on more server replies
+//2 Unable to form majority
+int unlockData(unsigned int key,std::string& val,int rqstNo,unsigned char FromServerNo,Holder::MetaData &metaData);
+int forceUnlockData(int key);
 private:
-Memory(){;}
+Memory();
 
 std::unordered_map<unsigned int,Holder *> cache;
 std::mutex ivMut;

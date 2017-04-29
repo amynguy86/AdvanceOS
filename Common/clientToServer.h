@@ -20,15 +20,11 @@ class ClientToServer: public Protocol
 {
 public:
 void reset();
-void addServer(ServerName serverName){serverNames.push_back(serverName);}
 ClientToServer();
 ~ClientToServer(){}
-const std::vector<ServerName>&  getServerNames(){return serverNames;}
 
 private:
 int parseMsg();
 int createBody();
-std::vector<ServerName> serverNames;
-
 };
 #endif

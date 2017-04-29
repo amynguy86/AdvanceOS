@@ -1,5 +1,16 @@
 #include "memory.h"
 
+Memory::Memory()
+{
+	//The first time Memory is initialized, its add object X[Key 0] into itself
+	Holder * data;
+	data=new Holder();
+	data->currData="X";
+	data->metaData.ds=0;
+	data->metaData.version=1;
+	data->metaData.ru=8;
+	cache[0]=data;
+}
 int Memory::AddOrUpdateWithLock(unsigned int key,const char * val,int initiatingClient,unsigned char serverToWaitOnBitMap,int rqstNo,bool isUpdate)
 {
  Memory::Holder * data= NULL;
@@ -31,6 +42,7 @@ int Memory::AddOrUpdateWithLock(unsigned int key,const char * val,int initiating
   data->ivMut.lock(); 
   data->metaData.initiatingClient=initiatingClient;
   data->metaData.serverWaitingOnBitMap=serverToWaitOnBitMap;
+  data->metaData.serverWaitingOnUnchanged=serverToWaitOnBitMap;
   data->metaData.rqstNo=rqstNo;
   data->metaData.isUpdate=isUpdate;
   data->newData=val;
@@ -38,7 +50,7 @@ int Memory::AddOrUpdateWithLock(unsigned int key,const char * val,int initiating
  return 0;
 }
 
-int Memory::AddOrUpdate(unsigned int key,const char * val,bool isUpdate)
+int Memory::AddOrUpdate(unsigned int key,const char * val,const Holder::MetaData& meta,bool isUpdate)
 {
   Memory::Holder * data= NULL;
   std::lock_guard<std::mutex> lck (ivMut);
@@ -56,7 +68,7 @@ int Memory::AddOrUpdate(unsigned int key,const char * val,bool isUpdate)
   {
   if(isUpdate)
    {
-   fprintf(stderr,"Its an Updat(AddOrUpdate(), and could not find value mapped by key %d\n",key);
+   fprintf(stderr,"Its an Update(AddOrUpdate(), and could not find value mapped by key %d\n",key);
    return -1;
    }
   else   
@@ -67,9 +79,39 @@ int Memory::AddOrUpdate(unsigned int key,const char * val,bool isUpdate)
    }
   }
  data->currData=val;
+ data->metaData.ds=meta.ds;
+ data->metaData.ru=meta.ru;
+ data->metaData.version=meta.version;
+
+ //the following output is graded!!
+ std::cout<<"Key:"<<key<<" Val:"<<val<<std::endl;
+ std::cout<<"RU:"<<data->metaData.ru<<std::endl;
+ std::cout<<"Version:"<<data->metaData.version<<std::endl;
+ std::cout<<"DS:"<<data->metaData.ds<<std::endl;
+
+ return 0;
 }
 
-int Memory::unlockData(unsigned int key,int rqstNo,unsigned char fromServerNo,Holder::MetaData &metaData)
+int Memory::forceUnlockData(int key)
+{
+	Holder * data= NULL;
+	{
+		std::lock_guard<std::mutex> lck (ivMut);
+		try
+		{
+			data=cache.at(key);
+		}
+		catch(const std::out_of_range& oor)
+		{
+			fprintf(stderr,"forceUnLockData, and could not find value mapped by key %d\n",key);
+			return -1;
+		}
+	}
+	data->ivMut.unlock();
+	return 0;
+}
+
+int Memory::unlockData(unsigned int key,std::string& val,int rqstNo,unsigned char fromServerNo,Holder::MetaData &metaData)
 {
  Holder * data= NULL;
  {
@@ -109,7 +151,14 @@ int Memory::unlockData(unsigned int key,int rqstNo,unsigned char fromServerNo,Ho
  metaData.initiatingClient=data->metaData.initiatingClient;
  metaData.rqstNo=data->metaData.rqstNo;
  metaData.isUpdate=data->metaData.isUpdate;
+ metaData.serverWaitingOnUnchanged=data->metaData.serverWaitingOnUnchanged;
+
+ /*
+  * Need to evaluate here if majorty is formed(todo)
+  * if majority not formed, should not commit
+  */
  data->commit();
+ val=data->currData;
  data->ivMut.unlock();
  return 0;
 }
@@ -132,8 +181,29 @@ const char * Memory::read(unsigned int key)
   return data->currData.c_str();
 }
 
+int Memory::readMetaData(unsigned int key,RU &ru, Version &version,DS &ds)
+{
+ Holder * data=NULL;
+ std::lock_guard<std::mutex> lck (ivMut);
+ try
+  {
+   data=cache.at(key);
+  }
+  catch(const std::out_of_range& oor)
+  {
+   fprintf(stderr,"Its an readMeta, and could not find value mapped by key %d\n",key);
+   return -1;
+  }
+
+  version=data->metaData.version;
+  ru=data->metaData.ru;
+  ds=data->metaData.ds;
+  return 0;
+}
+
 Memory * Memory::getInstance()
 {
+ //todo Need Mutex here but ok for now
  static Memory * memory=NULL;
  if(memory==NULL)
   memory= new Memory();
