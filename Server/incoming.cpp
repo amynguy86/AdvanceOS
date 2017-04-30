@@ -67,11 +67,11 @@ int Incoming::bindToIp(const char * const myIp,const char * const port,bool isFo
  {
   socklen_t size= sizeof(struct sockaddr_in);
   getsockname(*fd,(struct sockaddr *)&myIP,&size);
-  fprintf(stdout,"Successfully Bounded for server on %s:%d\n", inet_ntoa(myIP.sin_addr),ntohs(myIP.sin_port));
+  fprintf(stderr,"Successfully Bounded for server on %s:%d\n", inet_ntoa(myIP.sin_addr),ntohs(myIP.sin_port));
  }
  else
  {
-  fprintf(stdout,"Successfully Bounded for client on %s\n",myIp);
+  fprintf(stderr,"Successfully Bounded for client on %s\n",myIp);
  }
  return *fd;
 }

@@ -7,7 +7,7 @@ int Outgoing::tearDown()
    return 0;
   }
  //send Compelte Notification to   master Process
- cout<<"Sending Complete Notification to master process"<<endl;
+ cerr<<"Sending Complete Notification to master process"<<endl;
  sendMsg.reset();
  sendMsg.setId(processNum);
  sendMsg.setCode(CODE_COMPLETE);
