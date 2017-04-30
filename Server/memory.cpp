@@ -253,6 +253,7 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
  for(auto &it:data->incoming_metadata)
  	{
  	//the following output is graded!!
+    std::cout<<"Server No:"<<(int)it.first<<std::endl;
  	std::cout<<"RU:"<<(int)it.second.ru<<std::endl;
  	std::cout<<"Version:"<<(int)it.second.version<<std::endl;
  	std::cout<<"DS:"<<(int)it.second.ds<<std::endl;
