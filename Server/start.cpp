@@ -64,6 +64,7 @@ static void checkStop()
 
  while(true)
  {
+	 cout<<"Server Command Prompt: Use this to break links(eg. break 4)"<<endl;
 	 cout<<"-->";
 	 getline(std::cin,request);
 
