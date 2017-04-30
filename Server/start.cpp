@@ -74,8 +74,13 @@ static void checkStop()
 
 	 if(token=="break")
 	 {
-		 ss>>procNum;
-		 outgoing.disableLink(procNum);
+		 while(ss>>procNum)
+	      outgoing.disableLink(procNum);
+	 }
+	 else if(token=="establish")
+	 {
+		 while(ss>>procNum)
+		 outgoing.enableLink(procNum);
 	 }
 
 	 else

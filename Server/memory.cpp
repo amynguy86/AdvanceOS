@@ -48,7 +48,17 @@ int Memory::AddOrUpdateWithLock(unsigned int key,const char * val,int initiating
   data->newData=val;
   data->incoming_metadata.clear();
   data->incoming_metadata[initiatingServerProcNum]=data->metaData;
- 
+
+  if(data->metaData.serverWaitingOnUnchanged==0)
+  {
+	  //the following output is graded!!
+	  std::cout<<"Key:"<<key<<" Val:"<<data->currData<<std::endl;
+	  std::cout<<"RU:"<<(int)data->metaData.ru<<std::endl;
+	  std::cout<<"Version:"<<(int)data->metaData.version<<std::endl;
+	  std::cout<<"DS:"<<(int)data->metaData.ds<<std::endl;
+	  return -1;
+  }
+
  return 0;
 }
 
@@ -235,9 +245,11 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
  }
  else
  {
-	data->metaData.version++;
+	data->metaData.version=max_ver++;
+	data->metaData.ds=min_ds;
+	data->metaData.ru=data->incoming_metadata.size();
 	metaDataOut.ru=data->incoming_metadata.size();
-	metaDataOut.ds=data->min_ds;
+	metaDataOut.ds=min_ds;
 	metaDataOut.version=data->metaData.version;
 	data->commit();
 	val=data->currData;

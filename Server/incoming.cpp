@@ -212,9 +212,8 @@ void Incoming::serveClientRqsts(Obj_method obj_method)
    int serverFd=-1;
    int rc;
 
-   //construct the servers to wait on(those that are alive)
-   serverToWaitOn=obj_method.obj->outgoingHandler->getServersToWaitOn(serversToSend);
-   assert(serverToWaitOn!=0);
+ //construct the servers to wait on(those that are alive)
+ serverToWaitOn=obj_method.obj->outgoingHandler->getServersToWaitOn(serversToSend);
 
  rc=Memory::getInstance()->AddOrUpdateWithLock(reqMsgFromClient.getKey(),reqMsgFromClient.getVal(),fromFd,obj_method.obj->myProcNum,serverToWaitOn,reqMsgFromClient.getRqstNo(),isUpdate);
 

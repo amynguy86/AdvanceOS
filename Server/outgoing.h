@@ -48,7 +48,8 @@ void addToProcessFDMap(Id processNum,int fd);
 int send(Id toProcessNum,ServerToServer &reqMsgtoServer);
 int sendMsgToServers(const vector<Id> &serverToSend,ServerToServer reqMsgToServer);
 
-void disableLink(Id processNum){fprintf(stderr,"Disabled Link with Proc:%d",processNum);processFDMap[processNum].enabled=false;}
+void disableLink(Id processNum){fprintf(stderr,"Disabled Link with Proc:%d\n",processNum);processFDMap[processNum].enabled=false;}
+void enableLink(Id processNum){fprintf(stderr,"Enabled Link with Proc:%d\n",processNum);processFDMap[processNum].enabled=true;}
 bool isLinkDisabled(Id processNum){return !processFDMap[processNum].enabled;}
 
 static bool allTrue(bool * toCheck,int size);
