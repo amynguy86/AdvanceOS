@@ -477,12 +477,6 @@ if(rc==-1)
 	break;
     }
     
-    //the following output is graded!!
-    std::cout<<"Key:"<<(int)reqMsg.getKey()<<" Val:"<<val<<std::endl;
-    std::cout<<"RU:"<<(int)metaData.ru<<std::endl;
-    std::cout<<"Version:"<<(int)metaData.version<<std::endl;
-    std::cout<<"DS:"<<(int)metaData.ds<<std::endl;
-
    //succesfully got Majority so update all servers
    for(int i=0;i<sizeof(unsigned char)*8;i++)
    {

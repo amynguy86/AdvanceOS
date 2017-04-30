@@ -95,12 +95,6 @@ int Memory::AddOrUpdate(unsigned int key,const char * val,const Holder::MetaData
  data->metaData.ru=meta.ru;
  data->metaData.version=meta.version;
 
- //the following output is graded!!
- std::cout<<"Key:"<<key<<" Val:"<<val<<std::endl;
- std::cout<<"RU:"<<(int)data->metaData.ru<<std::endl;
- std::cout<<"Version:"<<(int)data->metaData.version<<std::endl;
- std::cout<<"DS:"<<(int)data->metaData.ds<<std::endl;
-
  return 0;
 }
 
@@ -254,6 +248,16 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
 	data->commit();
 	val=data->currData;
  }
+
+ std::cout<<"Key:"<<(int)key<<" Val:"<<data->currData<<std::endl;
+ for(auto &it:data->incoming_metadata)
+ 	{
+ 	//the following output is graded!!
+ 	std::cout<<"RU:"<<(int)it.second.ru<<std::endl;
+ 	std::cout<<"Version:"<<(int)it.second.version<<std::endl;
+ 	std::cout<<"DS:"<<(int)it.second.ds<<std::endl;
+ 	std::cout<<std::endl;
+ 	}
 
  data->ivMut.unlock();
  return 0;

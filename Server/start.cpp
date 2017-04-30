@@ -144,19 +144,19 @@ int portIndex=ipaddrMasterProc.find(':');
 
 if(portIndex==-1)
 {
- cout<<"No port number is masterprocaddr"<<endl;
+ cerr<<"No port number is masterprocaddr"<<endl;
  return 0;
 }
 struct sockaddr_in masterProcAddr={0};
 
 if(inet_pton(AF_INET,ipaddrMasterProc.substr(0,portIndex).c_str(),&(masterProcAddr.sin_addr))!=1)
   {
-  cout<<"invalid MasterProcAddr"<<endl;
+  cerr<<"invalid MasterProcAddr"<<endl;
   return 0;
   }
 masterProcAddr.sin_family=AF_INET;
 masterProcAddr.sin_port=htons(atoi(ipaddrMasterProc.substr(portIndex+1).c_str()));
-cout<<"Master Proc Addr"<<ipaddrMasterProc.substr(0,portIndex)<<"Port:"<<atoi(ipaddrMasterProc.substr(portIndex+1).c_str())<<endl;
+cerr<<"Master Proc Addr"<<ipaddrMasterProc.substr(0,portIndex)<<"Port:"<<atoi(ipaddrMasterProc.substr(portIndex+1).c_str())<<endl;
 myIp=argv[4];
 
 incoming.setTotalProc(N);

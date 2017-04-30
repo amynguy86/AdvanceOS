@@ -2,7 +2,7 @@
  * Client Command Line too issue requests to servers 
  */
 
-//#define UTD
+#define UTD
 #include "../Common/clientToServer.h"
 #include <thread>
 #include <vector>
@@ -37,6 +37,7 @@ std::vector<string> serverIps={
 "10.176.66.55",
 "10.176.66.56",
 "10.176.66.57",
+"10.176.66.58"
 };
 
 //Port number of the individual servers
@@ -48,6 +49,7 @@ PORT,
 PORT,
 PORT,
 PORT,
+PORT
 };
 #else
 std::vector<string> serverIps={
@@ -58,6 +60,7 @@ std::vector<string> serverIps={
 "10.24.29.12",
 "10.24.29.12",
 "10.24.29.12",
+"10.24.29.12"
 };
 
 //Port number of the individual servers
