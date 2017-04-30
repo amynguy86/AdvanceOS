@@ -220,6 +220,12 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
   }
  //=============================================================================================================================================== 
  //bool majorityFormed=true;
+ unsigned char min_ds=10;
+ for(int x = 0 ; x < data->incoming_metadata.size() ; x++){
+    if(participating_server[x] < min_ds){
+        min_ds = participating_server[x];
+    }
+ }
 
  if(!majorityFormed)
  {
@@ -231,7 +237,7 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
  {
 	data->metaData.version++;
 	metaDataOut.ru=data->incoming_metadata.size();
-	metaDataOut.ds=data->metaData.ds;
+	metaDataOut.ds=data->min_ds;
 	metaDataOut.version=data->metaData.version;
 	data->commit();
 	val=data->currData;
