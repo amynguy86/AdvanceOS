@@ -64,7 +64,7 @@ static void checkStop()
 
  while(true)
  {
-	 cout<<"Server Command Prompt: Use this to break links(eg. break 4)"<<endl;
+	 cout<<"Server Command Prompt: Use this to break/enable links(eg. break 4)"<<endl;
 	 cout<<"-->";
 	 getline(std::cin,request);
 
@@ -77,7 +77,7 @@ static void checkStop()
 		 while(ss>>procNum)
 	      outgoing.disableLink(procNum);
 	 }
-	 else if(token=="establish")
+	 else if(token=="enable")
 	 {
 		 while(ss>>procNum)
 		 outgoing.enableLink(procNum);
