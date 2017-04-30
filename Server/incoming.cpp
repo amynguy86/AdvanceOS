@@ -216,7 +216,7 @@ void Incoming::serveClientRqsts(Obj_method obj_method)
    serverToWaitOn=obj_method.obj->outgoingHandler->getServersToWaitOn(serversToSend);
    assert(serverToWaitOn!=0);
 
- rc=Memory::getInstance()->AddOrUpdateWithLock(reqMsgFromClient.getKey(),reqMsgFromClient.getVal(),fromFd,serverToWaitOn,reqMsgFromClient.getRqstNo(),isUpdate);
+ rc=Memory::getInstance()->AddOrUpdateWithLock(reqMsgFromClient.getKey(),reqMsgFromClient.getVal(),fromFd,obj_method.obj->myProcNum,serverToWaitOn,reqMsgFromClient.getRqstNo(),isUpdate);
 
  if(rc!=0)
   {

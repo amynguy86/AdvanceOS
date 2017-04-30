@@ -11,7 +11,7 @@ Memory::Memory()
 	data->metaData.ru=8;
 	cache[0]=data;
 }
-int Memory::AddOrUpdateWithLock(unsigned int key,const char * val,int initiatingClient,unsigned char serverToWaitOnBitMap,int rqstNo,bool isUpdate)
+int Memory::AddOrUpdateWithLock(unsigned int key,const char * val,int initiatingClientFD,unsigned char initiatingServerProcNum,unsigned char serverToWaitOnBitMap,int rqstNo,bool isUpdate)
 {
  Memory::Holder * data= NULL;
  {
@@ -40,12 +40,14 @@ int Memory::AddOrUpdateWithLock(unsigned int key,const char * val,int initiating
   }
  }
   data->ivMut.lock(); 
-  data->metaData.initiatingClient=initiatingClient;
+  data->metaData.initiatingClient=initiatingClientFD;
   data->metaData.serverWaitingOnBitMap=serverToWaitOnBitMap;
   data->metaData.serverWaitingOnUnchanged=serverToWaitOnBitMap;
   data->metaData.rqstNo=rqstNo;
   data->metaData.isUpdate=isUpdate;
   data->newData=val;
+  data->incoming_metadata.clear();
+  data->incoming_metadata[initiatingServerProcNum]=data->metaData;
  
  return 0;
 }
@@ -139,7 +141,7 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
    return -1;
   }
 
- data->metaData.incoming_metadata[server_number]=metaDataIn;
+ data->incoming_metadata[server_number]=metaDataIn;
  
  data->metaData.serverWaitingOnBitMap= (data->metaData.serverWaitingOnBitMap & ~fromServerNo);
  
@@ -167,10 +169,10 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
   unsigned char max_ver = 1;// max version #
 
   // has all the server numbers of all the servers in this partition
-  unsigned char participating_server[ data->metaData.incoming_metadata.size()];
+  unsigned char participating_server[ data->incoming_metadata.size()];
   int i = 0;
  
-  for ( auto it = data->metaData.incoming_metadata.begin(); it != data->metaData.incoming_metadata.end(); ++it ){
+  for ( auto it = data->incoming_metadata.begin(); it != data->incoming_metadata.end(); ++it ){
       
       participating_server[i] = it->first;
       i++;
@@ -181,7 +183,7 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
 
   unsigned char ru_max_updtd;// ru associated with max_ver
   unsigned char ds_max_updtd;// ds associated with max_ver
-  for (auto it = data->metaData.incoming_metadata.begin(); it != data->metaData.incoming_metadata.end(); ++it){
+  for (auto it = data->incoming_metadata.begin(); it != data->incoming_metadata.end(); ++it){
       if(max_ver == it->second.version){
           ru_max_updtd = it->second.ru;
           ds_max_updtd = it->second.ds;
@@ -191,7 +193,7 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
 
   bool majorityFormed=false;
   int contributing_site_count = 0;// # of servers with max_ver as their version number.
-  for (auto it = data->metaData.incoming_metadata.begin(); it != data->metaData.incoming_metadata.end(); ++it){
+  for (auto it = data->incoming_metadata.begin(); it != data->incoming_metadata.end(); ++it){
       if(max_ver == it->second.version){
           contributing_site_count++;
       }
@@ -202,9 +204,9 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
   }
   else if(contributing_site_count == ru_max_updtd/2){
       // distinguished site comes into picture
-      for (auto it = data->metaData.incoming_metadata.begin(); it != data->metaData.incoming_metadata.end(); ++it){
+      for (auto it = data->incoming_metadata.begin(); it != data->incoming_metadata.end(); ++it){
           if(max_ver == it->second.version){
-              for(int x = 0 ; x < data->metaData.incoming_metadata.size() ; x++){
+              for(int x = 0 ; x < data->incoming_metadata.size() ; x++){
                   if(ds_max_updtd == participating_server[x]){
                       majorityFormed = true;
                       break;
@@ -228,7 +230,7 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
  else
  {
 	data->metaData.version++;
-	metaDataOut.ru=data->metaData.incoming_metadata.size();
+	metaDataOut.ru=data->incoming_metadata.size();
 	metaDataOut.ds=data->metaData.ds;
 	metaDataOut.version=data->metaData.version;
 	data->commit();

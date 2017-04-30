@@ -57,13 +57,14 @@ bool isUpdate;
 /*
  * Project 3 specific variables
  */
- std::unordered_map<unsigned char,MetaData > incoming_metadata;// new hash table to hold the data from other servers..
  
+
  DS ds;
  RU ru;
  Version version;
 };
 
+std::unordered_map<unsigned char,MetaData > incoming_metadata;// new hash table to hold the data from other servers..
 MetaData metaData;
 std::mutex ivMut;
 };
@@ -74,7 +75,7 @@ std::mutex ivMut;
  * The one with the lock will only be executed by the primary server of the object.
  * The other one will be executed by the backup server of the object upon receving the request from the primary server.
  */
-int AddOrUpdateWithLock(unsigned int key,const char * val,int initiatingClient,unsigned char serverToWaitOnBitMap,int rqstNo,bool isUpdate);
+int AddOrUpdateWithLock(unsigned int key,const char * val,int initiatingClientFD,unsigned char initiatingServerProcNum,unsigned char serverToWaitOnBitMap,int rqstNo,bool isUpdate);
 int AddOrUpdate(unsigned int key,const char * val,const Holder::MetaData& meta,bool isUpdate);
 
 
@@ -95,7 +96,7 @@ static Memory * getInstance();
 //MetaDataOut is the metaData passed from the server that replied with CODE_VOTE_REPLY
 
 //Use metaDataOut for keeping track of which servers contains the latest version No.
-int unlockData(unsigned int key,std::string& val,int rqstNo,unsigned char FromServerNo,const Holder::MetaData &metaDataIn,Holder::MetaData &metaDataOut);
+int unlockData(unsigned int key,unsigned char server_number,std::string& val,int rqstNo,unsigned char FromServerNo,const Holder::MetaData &metaDataIn,Holder::MetaData &metaDataOut);
 int forceUnlockData(int key);
 private:
 Memory();
