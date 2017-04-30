@@ -463,7 +463,7 @@ if(rc==-1)
     if(reqMsg.getRc()!=RC_SUCCESS){fprintf(stderr, "the server No:%d, return unsuccessful result Code",reqMsg.getId()); assert(0);}
     
     fprintf(stderr,"MeteData From Server%d: RU:%d,Version:%d,DS:%d\n",reqMsg.getId(),reqMsg.getMetaData().ru,reqMsg.getMetaData().version,reqMsg.getMetaData().ds);
-    int rc=Memory::getInstance()->unlockData(reqMsg.getKey(),val,reqMsg.getRqstNo(),serverBit,reqMsg.getMetaData(),metaData);
+    int rc=Memory::getInstance()->unlockData(reqMsg.getKey(),reqMsg.getId(),val,reqMsg.getRqstNo(),serverBit,reqMsg.getMetaData(),metaData);
     
     if(rc==-1) assert(0); //todo not sure what to do here
     else if(rc==1) break;

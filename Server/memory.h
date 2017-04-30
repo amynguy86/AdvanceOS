@@ -57,6 +57,8 @@ bool isUpdate;
 /*
  * Project 3 specific variables
  */
+ std::unordered_map<unsigned char,MetaData > incoming_metadata;// new hash table to hold the data from other servers..
+ 
  DS ds;
  RU ru;
  Version version;

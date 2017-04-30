@@ -111,7 +111,7 @@ int Memory::forceUnlockData(int key)
 	return 0;
 }
 
-int Memory::unlockData(unsigned int key,std::string& val,int rqstNo,unsigned char fromServerNo,const Holder::MetaData &metaDataIn,Holder::MetaData &metaDataOut)
+int Memory::unlockData(unsigned int key,unsigned char server_number,std::string& val,int rqstNo,unsigned char fromServerNo,const Holder::MetaData &metaDataIn,Holder::MetaData &metaDataOut)
 {
  Holder * data= NULL;
  {
@@ -138,6 +138,8 @@ int Memory::unlockData(unsigned int key,std::string& val,int rqstNo,unsigned cha
    fprintf(stderr,"unLockData, rqstNo does not match RqstNo given%d: acual RqstNo%d: key: %d\n",rqstNo,data->metaData.rqstNo,key);
    return -1;
   }
+
+ data->metaData.incoming_metadata[server_number]=metaDataIn;
  
  data->metaData.serverWaitingOnBitMap= (data->metaData.serverWaitingOnBitMap & ~fromServerNo);
  
@@ -161,7 +163,61 @@ int Memory::unlockData(unsigned int key,std::string& val,int rqstNo,unsigned cha
  /*
   * Unit Test
   */
- bool majorityFormed=true;
+ //=========================================================================================
+  unsigned char max_ver = 1;// max version #
+
+  // has all the server numbers of all the servers in this partition
+  unsigned char participating_server[ data->metaData.incoming_metadata.size()];
+  int i = 0;
+ 
+  for ( auto it = data->metaData.incoming_metadata.begin(); it != data->metaData.incoming_metadata.end(); ++it ){
+      
+      participating_server[i] = it->first;
+      i++;
+      if(max_ver < it->second.version){
+          max_ver = it->second.version;
+      }
+  }
+
+  unsigned char ru_max_updtd;// ru associated with max_ver
+  unsigned char ds_max_updtd;// ds associated with max_ver
+  for (auto it = data->metaData.incoming_metadata.begin(); it != data->metaData.incoming_metadata.end(); ++it){
+      if(max_ver == it->second.version){
+          ru_max_updtd = it->second.ru;
+          ds_max_updtd = it->second.ds;
+          break;
+      }
+  }
+
+  bool majorityFormed=false;
+  int contributing_site_count = 0;// # of servers with max_ver as their version number.
+  for (auto it = data->metaData.incoming_metadata.begin(); it != data->metaData.incoming_metadata.end(); ++it){
+      if(max_ver == it->second.version){
+          contributing_site_count++;
+      }
+  }
+
+  if(contributing_site_count > ru_max_updtd/2){
+      majorityFormed = true;
+  }
+  else if(contributing_site_count == ru_max_updtd/2){
+      // distinguished site comes into picture
+      for (auto it = data->metaData.incoming_metadata.begin(); it != data->metaData.incoming_metadata.end(); ++it){
+          if(max_ver == it->second.version){
+              for(int x = 0 ; x < data->metaData.incoming_metadata.size() ; x++){
+                  if(ds_max_updtd == participating_server[x]){
+                      majorityFormed = true;
+                      break;
+                  }
+              }
+          }
+      }
+  }
+  else{
+      //no update....
+  }
+ //=============================================================================================================================================== 
+ //bool majorityFormed=true;
 
  if(!majorityFormed)
  {
@@ -172,7 +228,7 @@ int Memory::unlockData(unsigned int key,std::string& val,int rqstNo,unsigned cha
  else
  {
 	data->metaData.version++;
-	metaDataOut.ru=data->metaData.ru;
+	metaDataOut.ru=data->metaData.incoming_metadata.size();
 	metaDataOut.ds=data->metaData.ds;
 	metaDataOut.version=data->metaData.version;
 	data->commit();
