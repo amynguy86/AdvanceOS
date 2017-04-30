@@ -245,7 +245,7 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
  }
  else
  {
-	data->metaData.version=max_ver++;
+	data->metaData.version=max_ver+1;
 	data->metaData.ds=min_ds;
 	data->metaData.ru=data->incoming_metadata.size();
 	metaDataOut.ru=data->incoming_metadata.size();
