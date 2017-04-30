@@ -51,13 +51,13 @@ PORT,
 };
 #else
 std::vector<string> serverIps={
-"16.99.130.183",
-"16.99.130.183",
-"16.99.130.183",
-"16.99.130.183",
-"16.99.130.183",
-"16.99.130.183",
-"16.99.130.183",
+"16.214.98.230",
+"16.214.98.230",
+"16.214.98.230",
+"16.214.98.230",
+"16.214.98.230",
+"16.214.98.230",
+"16.214.98.230",
 };
 
 //Port number of the individual servers
@@ -164,6 +164,7 @@ int main(int argc,char *argv[])
 
  string request;
  string value;
+ int serverNo;
  Key key;
  ClientToServer rqstMsg;
  unsigned char rqstNo=0;
@@ -183,96 +184,28 @@ int main(int argc,char *argv[])
   if(token.length()!=1){cout<<"Wrong Command"<<endl; continue;}
   switch(token[0])
   {
-   case 'R':
-    ss>>key;
-    rqstMsg.setCode(CODE_READ);
-    rqstMsg.setDataBlock(key);
-    rqstMsg.setRc(RC_NONE);
-    rqstMsg.setId(1); //does not matter
-    rqstMsg.setRqstNo(rqstNo);
-    ss>>key;	
-    if(rqstMsg.sendAll(processFDMap[key])==0)
-      wait.lock();
-    else
-     {
-     cout<<"Unable to send Request:Server Not Availaible\n"<<endl;
-     }
-   break;
-
    case 'U':
-   case 'I':
-    {
-    if(token[0]=='I')
-     rqstMsg.setCode(CODE_INSERT);
-    else
      rqstMsg.setCode(CODE_UPDATE);
     
     ss>>key;
     ss>>value;
-
-    std::vector<ServerName> numServers;
-    
-    for(int i=0;i<3;i++)
-     {
-     try{
-      if(processFDMap.at((((key_hash(key))%7)+i)%7)!=-1)
-       numServers.push_back((((key_hash(key))%7)+i)%7);
-     }
-     catch(const std::out_of_range& oor)
-     {
-      cout<<"Caught"<<endl; 
-     }
-      cout<<"Hashed to:"<<(((key_hash(key))%7)+i)%7<<endl;
-     }
-
-    if(numServers.size()<2)
-     {
-      if(numServers.size()==1)
-       cout<<"only one server is UP and that is:"<<(int)numServers[0]<<endl;
-      else
-       cout<<"No Server is up to serve the Request"<<endl;
-      continue;
-     }
-    else
-     {
-      for(int i=1;i<numServers.size();i++)
-       {
-        rqstMsg.addServer(numServers[i]);
-       }
-     }
+    ss>>serverNo;
 
     rqstMsg.setDataBlock(key,value.length(),value.c_str());
     rqstMsg.setRc(RC_NONE);
     rqstMsg.setId(1); //does not mat/ter
     rqstMsg.setRqstNo(rqstNo);
-    
 
-    if(rqstMsg.sendAll(processFDMap[numServers[0]])==0)
-      wait.lock();
+
+    if(rqstMsg.sendAll(processFDMap[(int)serverNo])==0)
+    	wait.lock();
     else
-     {
-     cout<<"Unable to send Request\n"<<endl;
-     }
-   }
+    {
+    	cout<<"Unable to send Request\n"<<endl;
+    }
+
    break;
    
-   case 'H':  
-   ss>>key;
-   cout<<"Hashes To:"<<endl;
-   for(int i=0;i<3;i++)
-    cout<<(((key_hash(key))%7)+i)%7<<endl;
-   break;
-  
-  case 'B':
-  {
-  ss>>key;
-  int fd=processFDMap[key];
-  processFDMap[key]=-1;
-  close(fd);
-  cout<<"Broke Connection with server:"<<(int)key<<endl;
-  }
-  break;
-  
   default:
     cout<<"Wrong Command"<<endl;
   }

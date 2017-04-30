@@ -48,11 +48,14 @@ void addToProcessFDMap(Id processNum,int fd);
 int send(Id toProcessNum,ServerToServer &reqMsgtoServer);
 int sendMsgToServers(const vector<Id> &serverToSend,ServerToServer reqMsgToServer);
 
-void disableLink(Id processNum){processFDMap[processNum].enabled=false;}
+void disableLink(Id processNum){fprintf(stderr,"Disabled Link with Proc:%d",processNum);processFDMap[processNum].enabled=false;}
 bool isLinkDisabled(Id processNum){return !processFDMap[processNum].enabled;}
 
 static bool allTrue(bool * toCheck,int size);
 void stop();
+//returns bit map of servers to Wait on, and also add indiviual servers into vector passed
+unsigned char getServersToWaitOn(vector<Id> &serversToWaitOn);
+
 Outgoing(){processNum=0;toreDown=false;}
 ~Outgoing(){;}
 bool toreDown;

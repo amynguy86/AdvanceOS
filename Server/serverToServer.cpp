@@ -36,7 +36,7 @@ int ServerToServer::parseMsg()
     return 0;
    }
 
-   else if(code==CODE_INSERT || CODE_VOTE_REQUEST)
+   else if(code==CODE_INSERT || code==CODE_VOTE_REQUEST)
    {
     assert(parseDataBlock(readSoFar)==0);
     if(readSoFar!=msgLen)

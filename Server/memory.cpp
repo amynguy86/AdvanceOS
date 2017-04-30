@@ -85,9 +85,9 @@ int Memory::AddOrUpdate(unsigned int key,const char * val,const Holder::MetaData
 
  //the following output is graded!!
  std::cout<<"Key:"<<key<<" Val:"<<val<<std::endl;
- std::cout<<"RU:"<<data->metaData.ru<<std::endl;
- std::cout<<"Version:"<<data->metaData.version<<std::endl;
- std::cout<<"DS:"<<data->metaData.ds<<std::endl;
+ std::cout<<"RU:"<<(int)data->metaData.ru<<std::endl;
+ std::cout<<"Version:"<<(int)data->metaData.version<<std::endl;
+ std::cout<<"DS:"<<(int)data->metaData.ds<<std::endl;
 
  return 0;
 }
@@ -157,8 +157,28 @@ int Memory::unlockData(unsigned int key,std::string& val,int rqstNo,unsigned cha
   * Need to evaluate here if majorty is formed(todo)
   * if majority not formed, should not commit however please unlock it anyways
   */
- data->commit();
- val=data->currData;
+
+ /*
+  * Unit Test
+  */
+ bool majorityFormed=true;
+
+ if(!majorityFormed)
+ {
+	 fprintf(stderr,"Unable To Form majority\n");
+	 data->ivMut.unlock();
+	 return 2;
+ }
+ else
+ {
+	data->metaData.version++;
+	metaDataOut.ru=data->metaData.ru;
+	metaDataOut.ds=data->metaData.ds;
+	metaDataOut.version=data->metaData.version;
+	data->commit();
+	val=data->currData;
+ }
+
  data->ivMut.unlock();
  return 0;
 }

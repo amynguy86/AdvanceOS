@@ -53,6 +53,7 @@ int Outgoing::establishConnWithMain()
  Writing takes place either here for slave processes or in Incoming for master  
  */
  processFDMap[0].fd=sockFd;
+ processFDMap[0].enabled=true;
 
  //todo check if these values have been set
  sendMsg.setCode(CODE_ESTABLISH);
@@ -146,6 +147,7 @@ for(auto& x : *msgParser.getAllIpAddr())
   reqMsgToServer.sendAll(sockFd);
 
   processFDMap[x.first].fd=sockFd;
+  processFDMap[x.first].enabled=true;
  }
 
  std::cerr<<"Successfully established Connection with All processes"<<std::endl;
@@ -156,7 +158,11 @@ for(auto& x : *msgParser.getAllIpAddr())
 
 int Outgoing::send(Id toProcessNum,ServerToServer &reqMsgToServer)
 {
-  if(isLinkDisabled(toProcessNum)) return -1;
+  if(isLinkDisabled(toProcessNum))
+	  {
+	  fprintf(stderr,"Link Disabled with Server:%d\n",toProcessNum);
+	  return -1;
+	  }
 
   assert(reqMsgToServer.sendAll(processFDMap[toProcessNum].fd)==0);
   return 0;
@@ -181,4 +187,24 @@ void Outgoing::stop()
   shutdown(x.second.fd,2);
   close(x.second.fd);
   }
+}
+
+unsigned char Outgoing::getServersToWaitOn(vector<Id>& serversToSend)
+{
+	unsigned char serverToWaitOn=0;
+    unsigned char serverBit=1;
+
+    //construct the servers to wait on(those that are alive)
+	for(auto x= processFDMap.begin();x!=processFDMap.end();++x)
+	{
+		//if this server is alive..
+		if(x->second.enabled)
+		{
+			serverBit=1;
+			serverBit=serverBit << x->first;
+			serverToWaitOn=serverToWaitOn | serverBit;
+			serversToSend.push_back(x->first);
+		}
+	}
+	return serverToWaitOn;
 }

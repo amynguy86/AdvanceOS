@@ -31,7 +31,7 @@ void reset();
 void setMyAddr(struct sockaddr_in& anAddr){addr=anAddr;}
 const struct sockaddr_in&  getAddr(){return addr;}
 void printAllIPAddr(FILE * stream);
-void setMetaData(RU ru,Version version,DS ds){metaData.ds=ds;metaData.version=version;metaData.ds=ds;}
+void setMetaData(RU ru,Version version,DS ds){metaData.ds=ds;metaData.version=version;metaData.ru=ru;}
 const Memory::Holder::MetaData& getMetaData(){return metaData;}
 
 ServerToServer();

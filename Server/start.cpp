@@ -20,6 +20,10 @@
 #include "incoming.h"
 #include <thread>
 #include <vector>
+#include <iostream>
+#include <sstream>
+#include <cstring>
+#include <string>
 static string  PORT ="1025"; //use for hearing client msgs
 #define PORT_MASTER_SERVER "1024" //used for  master server
 
@@ -49,17 +53,34 @@ cout<<"Exiting"<<endl;
 
 static void checkStop()
 {
- string stop="";
+ cout<<"-->";
+ string request;
+ getline(std::cin,request);
+
+ std::stringstream ss(request);
+ std::string token;
+ ss>>token;
+ int procNum;
+
  while(true)
  {
-  cin>>stop;
- if(stop=="stop")
-  {
-   incoming.stop();
-   break;
-  }
- else
-  cout<<"Could Not Understand Command, Type stop to exit"<<endl;
+	 cout<<"-->";
+	 getline(std::cin,request);
+
+	 std::stringstream ss(request);
+	 std::string token;
+	 ss>>token;
+
+	 if(token=="break")
+	 {
+		 ss>>procNum;
+		 outgoing.disableLink(procNum);
+	 }
+
+	 else
+	 {
+		 cout<<"Could not understand Command"<<endl;
+	 }
  }
 }
 
@@ -152,7 +173,6 @@ outgoing.setTotalProc(N);
 
 std::thread incomingThread(runIncoming);
 std::thread outgoingThread(runOutgoing);
-std::thread stopThread(checkStop);
 
 {
  std::unique_lock<std::mutex> lck(doneMut);
@@ -167,6 +187,7 @@ std::thread stopThread(checkStop);
   if(argc==6)
 	  PORT=argv[5];
   if(incoming.bindToIp(myIp,PORT.c_str(),true)==-1) return 0;
+  std::thread stopThread(checkStop);
   cout<<"Ready To Take Requests From Client"<<endl;
   if(incoming.allowClientRqsts()==-1) return 0;
  }
@@ -175,6 +196,5 @@ std::thread stopThread(checkStop);
 }
 incomingThread.join();
 outgoingThread.join();
-stopThread.join();
 }
 

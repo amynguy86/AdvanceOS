@@ -213,17 +213,8 @@ void Incoming::serveClientRqsts(Obj_method obj_method)
    int rc;
 
    //construct the servers to wait on(those that are alive)
-   for(auto x=obj_method.obj->processIPMap.begin();x!=obj_method.obj->processIPMap.end();++x)
-   {
-	  //if this server is alive..
-	   if(!obj_method.obj->outgoingHandler->isLinkDisabled(x->first))
-	   {
-		   serverBit=1;
-		   serverBit=serverBit << x->first;
-		   serverToWaitOn=serverToWaitOn | serverBit;
-		   serversToSend.push_back(x->first);
-	   }
-   }
+   serverToWaitOn=obj_method.obj->outgoingHandler->getServersToWaitOn(serversToSend);
+   assert(serverToWaitOn!=0);
 
  rc=Memory::getInstance()->AddOrUpdateWithLock(reqMsgFromClient.getKey(),reqMsgFromClient.getVal(),fromFd,serverToWaitOn,reqMsgFromClient.getRqstNo(),isUpdate);
 
@@ -471,6 +462,7 @@ if(rc==-1)
     serverBit= serverBit<<reqMsg.getId();
     if(reqMsg.getRc()!=RC_SUCCESS){fprintf(stderr, "the server No:%d, return unsuccessful result Code",reqMsg.getId()); assert(0);}
     
+    fprintf(stderr,"MeteData From Server%d: RU:%d,Version:%d,DS:%d\n",reqMsg.getId(),reqMsg.getMetaData().ru,reqMsg.getMetaData().version,reqMsg.getMetaData().ds);
     int rc=Memory::getInstance()->unlockData(reqMsg.getKey(),val,reqMsg.getRqstNo(),serverBit,reqMsg.getMetaData(),metaData);
     
     if(rc==-1) assert(0); //todo not sure what to do here
@@ -486,6 +478,12 @@ if(rc==-1)
 	break;
     }
     
+    //the following output is graded!!
+    std::cout<<"Key:"<<(int)reqMsg.getKey()<<" Val:"<<val<<std::endl;
+    std::cout<<"RU:"<<(int)metaData.ru<<std::endl;
+    std::cout<<"Version:"<<(int)metaData.version<<std::endl;
+    std::cout<<"DS:"<<(int)metaData.ds<<std::endl;
+
    //succesfully got Majority so update all servers
    for(int i=0;i<sizeof(unsigned char)*8;i++)
    {
@@ -497,7 +495,7 @@ if(rc==-1)
 	   replyMsg.setRqstNo(reqMsg.getRqstNo());
 	   replyMsg.setDataBlock(reqMsg.getKey(),val.size(),val.c_str());//data form memory)
 	   replyMsg.setMetaData(metaData.ru,metaData.version,metaData.ds);
-	   replyMsg.sendAll(i);
+	   assert(outgoingHandler->send(i,replyMsg)==0);
 	   }
    }
 
