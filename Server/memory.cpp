@@ -168,13 +168,10 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
  metaDataOut.serverWaitingOnUnchanged=data->metaData.serverWaitingOnUnchanged;
 
  /*
-  * Need to evaluate here if majorty is formed(todo)
-  * if majority not formed, should not commit however please unlock it anyways
+  * Need to evaluate here if majorty is formed
+  * if majority not formed, should not commit however unlock it anyways
   */
 
- /*
-  * Unit Test
-  */
  //=========================================================================================
   unsigned char max_ver = 1;// max version #
 
@@ -212,8 +209,10 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
   if(contributing_site_count > ru_max_updtd/2){
       majorityFormed = true;
   }
-  else if(contributing_site_count == ru_max_updtd/2){
+  //Amin: bug Fix:distinguished site only useful when even number of servers were last updated
+  else if(contributing_site_count == ru_max_updtd/2 && (ru_max_updtd %2==0) ){
       // distinguished site comes into picture
+
       for (auto it = data->incoming_metadata.begin(); it != data->incoming_metadata.end(); ++it){
           if(max_ver == it->second.version){
               for(int x = 0 ; x < data->incoming_metadata.size() ; x++){
@@ -229,7 +228,6 @@ int Memory::unlockData(unsigned int key,unsigned char server_number,std::string&
       //no update....
   }
  //=============================================================================================================================================== 
- //bool majorityFormed=true;
  unsigned char min_ds=10;
  for(int x = 0 ; x < data->incoming_metadata.size() ; x++){
     if(participating_server[x] < min_ds){
