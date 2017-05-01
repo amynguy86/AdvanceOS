@@ -1,0 +1,20 @@
+Master Proc Addr16.116.129.23Port:0
+Successfully Bounded for server on 16.116.129.23:1024
+listening
+Server: Waiting for Connections
+Got Connection from Every Other Server
+Msg Received: Code:0, Id:1, sizeofMsg:14
+Sending All IpAddrs to Process NoMasterProc:Successfully established Connection with All processes1
+
+Successfully Bounded for client on 16.116.129.23
+listening on Client Fd
+Server: Waiting for Connections to server Clients
+Msg Received: Code:3, Id:1, sizeofMsg:19
+Requst recieve from clientFd:1Code:3 ,Key:0 ValLen:6Msg Received: Code:11, Id:1, sizeofMsg:16
+MeteData From Server1: RU:8,Version:1,DS:0
+Unable To Form majority
+Msg Received: Code:6, Id:1, sizeofMsg:13
+Requst recieve from clientFd:1Code:6 ,Key:0 ValLen:0Msg Received: Code:3, Id:1, sizeofMsg:18
+Requst recieve from clientFd:1Code:3 ,Key:0 ValLen:5Msg Received: Code:11, Id:1, sizeofMsg:16
+MeteData From Server1: RU:8,Version:1,DS:0
+Unable To Form majority

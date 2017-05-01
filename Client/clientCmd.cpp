@@ -20,7 +20,7 @@
 #include <stdlib.h>
 
 #define  PORT 1025 //server hearing on this port for UTD, for cygwin starting port number
-#define NUMSERVERS 4
+#define NUMSERVERS 8
 using namespace std;
 
 /*
@@ -53,14 +53,14 @@ PORT
 };
 #else
 std::vector<string> serverIps={
-"10.24.29.12",
-"10.24.29.12",
-"10.24.29.12",
-"10.24.29.12",
-"10.24.29.12",
-"10.24.29.12",
-"10.24.29.12",
-"10.24.29.12"
+"16.116.129.23",
+"16.116.129.23",
+"16.116.129.23",
+"16.116.129.23",
+"16.116.129.23",
+"16.116.129.23",
+"16.116.129.23",
+"16.116.129.23"
 };
 
 //Port number of the individual servers
@@ -209,6 +209,23 @@ int main(int argc,char *argv[])
 
    break;
    
+   case 'R':
+	   ss>>key;
+	   ss>>serverNo;
+
+	   rqstMsg.setCode(CODE_READ);
+	   rqstMsg.setDataBlock(key);
+	   rqstMsg.setRc(RC_NONE);
+	   rqstMsg.setId(1); //does not matter
+	   rqstMsg.setRqstNo(rqstNo);
+	   if(rqstMsg.sendAll(processFDMap[serverNo])==0)
+		   wait.lock();
+	   else
+	   {
+		   cout<<"Unable to send Request:Server Not Availaible\n"<<endl;
+	   }
+	   break;
+
   default:
     cout<<"Wrong Command"<<endl;
   }

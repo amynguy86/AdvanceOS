@@ -159,9 +159,6 @@ void Incoming::serveClientRqsts(Obj_method obj_method)
 
  switch(reqMsgFromClient.getCode())
  {
- /*
-  * Not Applicable to Project3
-  *
   case CODE_READ:
    {
    const char * data=Memory::getInstance()->read(reqMsgFromClient.getKey());
@@ -182,7 +179,6 @@ void Incoming::serveClientRqsts(Obj_method obj_method)
     replyMsgToClient.sendAll(fromFd);
     break;
    }
-   */
 
   //CODE_INSERT is also not applicable to Project3
   case CODE_UPDATE:

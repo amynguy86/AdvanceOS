@@ -5,20 +5,12 @@ All the object files and executables will be in the inst directory(created by ma
 
 Running Instructions
 ClientCmd Commands
-Read
-R KEY SERVERNO 
 
 Update 
-U KEY VALUE
+U KEY VALUE UPDATETOSERVERNO
 
-Insert
-I KEY VALUE
-
-Hash(returns the serverNo that the key hashes to. Useful for read command)
-H KEY
-
-Break(break connection with the server)
-B SERVERNO
+READ
+R KEY READFROMSERVERNO
 
 runServer instructions
 Start the master process first and then start other servers
