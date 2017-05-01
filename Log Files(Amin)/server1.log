@@ -1,0 +1,58 @@
+{dc02:~/AdvanceOS/Server} ./inst/runServer 1 8 10.176.66.51:1024 10.176.66.52  2> server1ErrLog
+Ready To Take Requests From Client
+-->Key:0 Val:R0C0U1
+RU:8
+Version:2
+DS:0
+Key:0 Val:R0C0U2
+RU:8
+Version:3
+DS:0
+
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->b 4 5 6 7
+Could not understand Command
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->break 4 5 6 7
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->Key:0 Val:R1C0U1
+RU:4
+Version:4
+DS:0
+Key:0 Val:R1C0U2
+RU:4
+Version:5
+DS:0
+
+Could not understand Command
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->break 0
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->Key:0 Val:R2C1U0
+RU:3
+Version:6
+DS:1
+
+Could not understand Command
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->Key:0 Val:R2C1U1
+RU:3
+Version:7
+DS:1
+
+Could not understand Command
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->enable 4 5 6
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->Key:0 Val:R3C0U0
+RU:6
+Version:8
+DS:1
+
+Could not understand Command
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->Key:0 Val:R3C0U1
+RU:6
+Version:9
+DS:1
+

@@ -1,0 +1,16 @@
+
+{dc08:~/AdvanceOS/Server} ./inst/runServer 7 8 10.176.66.51:1024 10.176.66.58  2> server7ErrLog
+Ready To Take Requests From Client
+-->Key:0 Val:R0C0U1
+RU:8
+Version:2
+DS:0
+Key:0 Val:R0C0U2
+RU:8
+Version:3
+DS:0
+
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->break 0 1 2 3
+Server Command Prompt: Use this to break/enable links(eg. break 4)
+-->
